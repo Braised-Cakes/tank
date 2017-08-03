@@ -1,0 +1,149 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>无标题文档</title>
+</head>
+<style>
+	* {
+		margin: 0;
+		padding: 0;
+	}
+
+	body {
+		background: #000;
+	}
+
+	p {
+		color: red;
+	}
+
+	#c1 {
+		background: #fff;
+	}
+</style>
+<script>
+	window.onload = function() {
+		var oC = document.getElementById('c1');
+		var oCCC = document.getElementById('ccc');
+		var cxt = oC.getContext('2d');
+		var iTerr = document.getElementById('iTerr');
+		var arr = [];
+		var mapEditor = {
+			translateX: 37,
+			translateY: 36,
+			baseSide: [609, 610, 611, 612, 635, 638, 661, 664],
+			base: [636, 637, 662, 663],
+			type: 1,
+			l: 450,
+			t: [10, 40, 70, 100, 130, 160]
+		};
+		InitMapEditor();
+
+		function InitMapEditor() {
+			var len = 26 * 26;
+			for (var i = 0; i < len; i++) {
+				arr.push(0);
+			}
+			RenderMapEditor();
+		};
+
+		function RenderMapEditor() {
+			cxt.save();
+			cxt.translate(mapEditor.translateX, mapEditor.translateY);
+			cxt.fillRect(0, 0, 416, 416);
+			cxt.fillRect(mapEditor.l, mapEditor.t[0], 16, 16);
+			for (var i = 1; i < 6; i++) {
+				if (mapEditor.type == i) {
+					cxt.fillStyle = 'red';
+					cxt.fillRect(mapEditor.l - 5, mapEditor.t[i] - 5, 26, 26);
+				}
+				cxt.drawImage(iTerr, i * 16, 0, 16, 16, mapEditor.l, mapEditor.t[i], 16, 16);
+			}
+			for (var i = 0; i < mapEditor.baseSide.length; i++) {
+				arr[mapEditor.baseSide[i]] = 1;
+				cxt.drawImage(iTerr, 16, 0, 16, 16, parseInt(mapEditor.baseSide[i] % 26) * 16, parseInt(mapEditor.baseSide[i] / 26) * 16, 16, 16);
+			};
+			for (var i = 0; i < mapEditor.base.length; i++) {
+				arr[mapEditor.base[i]] = i + 6;
+				cxt.drawImage(iTerr, 96 + i * 16, 0, 16, 16, parseInt(mapEditor.base[i] % 26) * 16, parseInt(mapEditor.base[i] / 26) * 16, 16, 16);
+			}
+			cxt.restore();
+		};
+
+		function RenderBrick(x, y) {
+			if (x <= 0 || x >= 416 || y <= 0 || y >= 416) {
+				return;
+			}
+			for (var i = 0; i < mapEditor.base.length; i++) {
+				if (parseInt(y / 16) * 26 + parseInt(x / 16) == mapEditor.base[i]) {
+					return;
+				}
+			}
+			for (var i = 0; i < mapEditor.baseSide.length; i++) {
+				if (parseInt(y / 16) * 26 + parseInt(x / 16) == mapEditor.baseSide[i] && (mapEditor.type != 1 && mapEditor.type != 2)) {
+					return;
+				}
+			}
+			cxt.save();
+			cxt.translate(mapEditor.translateX, mapEditor.translateY);
+			if (mapEditor.type == 0) {
+				cxt.fillRect(parseInt(x / 16) * 16, parseInt(y / 16) * 16, 16, 16);
+			} else {
+				cxt.drawImage(iTerr, mapEditor.type * 16, 0, 16, 16, parseInt(x / 16) * 16, parseInt(y / 16) * 16, 16, 16);
+			}
+			cxt.restore();
+			arr[parseInt(y / 16) * 26 + parseInt(x / 16)] = mapEditor.type;
+		};
+		oC.onmousedown = function(ev) {
+			var ev = ev || event;
+			var x = ev.clientX - mapEditor.translateX;
+			var y = ev.clientY - mapEditor.translateY;
+			for (var i = 0; i < 6; i++) {
+				if (x >= mapEditor.l && x <= mapEditor.l + 16 && y >= mapEditor.t[i] && y <= mapEditor.t[i] + 16) {
+					mapEditor.type = i;
+					cxt.save();
+					cxt.translate(mapEditor.translateX, mapEditor.translateY);
+					cxt.clearRect(mapEditor.l - 5, mapEditor.t[0] - 5, 50, 200);
+					for (var j = 0; j < 6; j++) {
+						if (j == 0) {
+							cxt.fillRect(mapEditor.l, mapEditor.t[j], 16, 16);
+						} else {
+							cxt.drawImage(iTerr, (j) * 16, 0, 16, 16, mapEditor.l, mapEditor.t[j], 16, 16);
+						}
+					}
+					cxt.fillStyle = 'red';
+					cxt.fillRect(mapEditor.l - 5, mapEditor.t[i] - 5, 26, 26);
+					cxt.drawImage(iTerr, (i) * 16, 0, 16, 16, mapEditor.l, mapEditor.t[i], 16, 16);
+					cxt.restore();
+				}
+			}
+			RenderBrick(x, y);
+			document.onmousemove = function(ev) {
+				var ev = ev || event;
+				var x = ev.clientX - mapEditor.translateX;
+				var y = ev.clientY - mapEditor.translateY;
+				if (x <= 0 || x >= 416 || y <= 0 || y >= 416) {
+					return;
+				}
+				RenderBrick(x, y);
+			};
+			document.onmouseup = function() {
+				document.onmousemove = null;
+				document.onmouseup = null;
+				oCCC.innerHTML = arr;
+			};
+		};
+	};
+</script>
+
+<body>
+	<canvas id='c1' width="530" height="490"></canvas>
+	<div style="display:none;">
+		<img id="iTerr" src="img/Terr.png" />
+	</div>
+	<textarea id='ccc'></textarea>
+</body>
+
+</html>
